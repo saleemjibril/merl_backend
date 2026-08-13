@@ -13,8 +13,14 @@ import AppError from "../utils/AppError.js";
 import { assertRole, getOrgProject } from "../utils/access.js";
 import { computeProgress, aggregateByIndicator } from "../utils/progress.js";
 
-const reportDir = path.join(process.env.UPLOAD_DIR || "uploads/evidence", "..", "reports");
-fs.mkdirSync(reportDir, { recursive: true });
+const uploadRoot =
+  process.env.UPLOAD_DIR ||
+  (process.env.VERCEL ? "/tmp/uploads/evidence" : "uploads/evidence");
+const reportDir = path.join(uploadRoot, "..", "reports");
+
+function ensureReportDir() {
+  fs.mkdirSync(reportDir, { recursive: true });
+}
 
 async function gatherRows(projectId, periodId) {
   const indicators = await Indicator.find({ project: projectId, isActive: true }).sort({
@@ -63,6 +69,7 @@ export const generateReport = catchAsync(async (req, res) => {
   if (!period) throw new AppError("Period not found", 404);
 
   const rows = await gatherRows(project._id, periodId);
+  ensureReportDir();
   const storedName = `${uuidv4()}.${format === "xlsx" ? "xlsx" : format}`;
   const filePath = path.join(reportDir, storedName);
   let fileName = `${project.name.replace(/[^\w.-]+/g, "_")}_${period.name.replace(/[^\w.-]+/g, "_")}.${format === "xlsx" ? "xlsx" : format}`;

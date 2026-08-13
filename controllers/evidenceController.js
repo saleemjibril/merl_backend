@@ -8,11 +8,23 @@ import catchAsync from "../utils/catchAsync.js";
 import AppError from "../utils/AppError.js";
 import { assertRole, getOrgProject } from "../utils/access.js";
 
-const uploadDir = process.env.UPLOAD_DIR || "uploads/evidence";
-fs.mkdirSync(uploadDir, { recursive: true });
+const uploadDir =
+  process.env.UPLOAD_DIR ||
+  (process.env.VERCEL ? "/tmp/uploads/evidence" : "uploads/evidence");
+
+function ensureUploadDir() {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
 
 const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => cb(null, uploadDir),
+  destination: (_req, _file, cb) => {
+    try {
+      ensureUploadDir();
+      cb(null, uploadDir);
+    } catch (err) {
+      cb(err);
+    }
+  },
   filename: (_req, file, cb) => {
     const ext = path.extname(file.originalname);
     cb(null, `${uuidv4()}${ext}`);

@@ -4,6 +4,9 @@
   "description": "MERL — Monitoring, Evaluation, Research & Learning API",
   "main": "index.js",
   "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "dev": "nodemon index.js",
     "start": "node index.js",
